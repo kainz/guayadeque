@@ -48,7 +48,7 @@ namespace Guayadeque {
 
 #define guRADIO_TIMER_TEXTSEARCH        1
 #define guRADIO_TIMER_GENRESELECTED     2
-#define guRADIO_TIMER_TEXTSEARCH_VALUE  500
+#define guRADIO_TIMER_TEXTSEARCH_VALUE  1500
 
 // -------------------------------------------------------------------------------- //
 // guRadioStationListBox
