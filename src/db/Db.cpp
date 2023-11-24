@@ -23,6 +23,9 @@
 
 #include "Utils.h"
 
+#include <unicode/unistr.h>
+#include <unicode/translit.h>
+
 //#define DBLIBRARY_SHOW_QUERIES      1
 //#define DBLIBRARY_SHOW_TIMES        1
 //#define DBLIBRARY_MIN_TIME          50
@@ -38,6 +41,8 @@ guDb::guDb()
 // -------------------------------------------------------------------------------- //
 guDb::guDb( const wxString &dbname )
 {
+    m_DbFoldAllCollation = guDbFoldAllCollation();
+    m_DbFoldAllContainsFunction = guDbFoldAllContainsFunction();
     Open( dbname );
 }
 
@@ -158,6 +163,8 @@ void guDb::SetInitParams( void )
   //query = wxT( "PRAGMA legacy_file_format=false; PRAGMA page_size=102400; PRAGMA cache_size=204800; PRAGMA count_changes=1; PRAGMA synchronous='OFF'; PRAGMA short_column_names=0; PRAGMA full_column_names=0;" );
   //query = wxT( "PRAGMA page_size=10240; PRAGMA cache_size=65536; PRAGMA count_changes=1; PRAGMA synchronous='OFF'; PRAGMA short_column_names=0; PRAGMA full_column_names=0;" );
   ExecuteUpdate( query );
+  m_Db->SetCollation( wxT("NOCASENOACCENTS"), &m_DbFoldAllCollation );
+  m_Db->CreateFunction( wxString("CONTAINS_FA"), 2, m_DbFoldAllContainsFunction, true );
 }
 
 }

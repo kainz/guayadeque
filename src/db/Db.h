@@ -30,6 +30,12 @@
 
 // wxSqlite3
 #include <wx/wxsqlite3.h>
+#include <sqlite3.h>
+
+// icu
+#include <unicode/unistr.h>
+#include <unicode/ustream.h>
+#include <unicode/translit.h>
 
 namespace Guayadeque {
 
@@ -51,11 +57,79 @@ wxString inline escape_query_str( const wxString &str )
 }
 
 // -------------------------------------------------------------------------------- //
+class guFoldAllTransliterator
+{
+public:
+
+  icu::Transliterator  *accentsConverter;
+
+  guFoldAllTransliterator()
+  {
+    UErrorCode error = U_ZERO_ERROR;
+    accentsConverter = icu::Transliterator::createInstance("NFD; [:M:] Remove; Lower; NFC", UTRANS_FORWARD, error);    
+  }
+
+  icu::UnicodeString   WxStrToICU(const wxString& wxs)
+  {
+    return icu::UnicodeString::fromUTF32((const UChar32*)wxs.wc_str(), wxs.Length());
+  }
+
+  void Fold(icu::UnicodeString& what)
+  {
+    accentsConverter->transliterate(what);
+  }
+
+};
+
+class guDbFoldAllCollation : public wxSQLite3Collation
+{
+
+public:
+
+  guFoldAllTransliterator  transliterator;
+
+  guDbFoldAllCollation() : wxSQLite3Collation()
+  {
+    transliterator = guFoldAllTransliterator();
+  }
+
+  int Compare(const wxString& text1, const wxString& text2)
+  {
+    guLogDebug("guDbFoldAllCollation::Compare %s %s", text1, text2);
+    icu::UnicodeString t1 = transliterator.WxStrToICU(text1),
+                       t2 = transliterator.WxStrToICU(text2);
+    transliterator.Fold(t1);
+    transliterator.Fold(t2);
+    return t1.compare(t2);
+  }
+
+};
+
+class guDbFoldAllContainsFunction : public wxSQLite3ScalarFunction
+{
+public:
+
+  guFoldAllTransliterator  transliterator;
+
+  void Execute( wxSQLite3FunctionContext &    ctx )
+  {
+    guLogDebug("guDbFoldAllContainsFunction::Execute %s %s", ctx.GetString(0), ctx.GetString(1));
+    icu::UnicodeString t1 = transliterator.WxStrToICU(ctx.GetString(0)),
+                       t2 = transliterator.WxStrToICU(ctx.GetString(1));
+    transliterator.Fold(t1);
+    transliterator.Fold(t2);
+    ctx.SetResult( t1.indexOf(t2) );
+    return;
+  }
+};
+
 class guDb
 {
   protected :
-    wxString                m_DbName;
-    wxSQLite3Database  *    m_Db;
+    wxString                       m_DbName;
+    wxSQLite3Database  *           m_Db;
+    guDbFoldAllCollation           m_DbFoldAllCollation;
+    guDbFoldAllContainsFunction    m_DbFoldAllContainsFunction;
 
   public :
     guDb( void );

@@ -196,11 +196,11 @@ wxString TextFilterToSQL( const wxArrayString &TeFilters )
     for( int index = 0; index < count; index++ )
     {
         wxString Filter = escape_query_str( TeFilters[ index ] );
-        RetVal += wxT( "( song_name LIKE '%" ) + Filter + wxT( "%' OR " );
-        RetVal += wxT( " song_albumartist LIKE '%" ) +  Filter + wxT( "%' OR " );
-        RetVal += wxT( " song_artist LIKE '%" ) +  Filter + wxT( "%' OR " );
-        RetVal += wxT( " song_composer LIKE '%" ) +  Filter + wxT( "%' OR " );
-        RetVal += wxT( " song_album LIKE '%" ) +  Filter + wxT( "%' ) " );
+        RetVal += wxT( "( CONTAINS_FA(song_name, '" ) + Filter + wxT( "')>-1 OR " );
+        RetVal += wxT( " CONTAINS_FA(song_albumartist, '" ) +  Filter + wxT( "')>-1 OR " );
+        RetVal += wxT( " CONTAINS_FA(song_artist, '" ) +  Filter + wxT( "')>-1 OR " );
+        RetVal += wxT( " CONTAINS_FA(song_composer, '" ) +  Filter + wxT( "')>-1 OR " );
+        RetVal += wxT( " CONTAINS_FA(song_album, '" ) +  Filter + wxT( "')>-1 ) " );
         RetVal += wxT( "AND " );
     }
     RetVal = RetVal.RemoveLast( 4 );
@@ -3040,9 +3040,9 @@ wxString inline AlbumBrowserTextFilterToSQL( const wxArrayString &textfilters )
     for( int index = 0; index < count; index++ )
     {
         wxString Filter = escape_query_str( textfilters[ index ] );
-        RetVal += wxT( "( song_album LIKE '%" ) + Filter + wxT( "%' OR " );
-        RetVal += wxT( " song_albumartist LIKE '%" ) + Filter + wxT( "%' OR " );
-        RetVal += wxT( " song_artist LIKE '%" ) + Filter + wxT( "%' ) " );
+        RetVal += wxT( "( CONTAINS_FA(song_album LIKE, '" ) + Filter + wxT( "')>-1 OR " );
+        RetVal += wxT( " CONTAINS_FA(song_albumartist, '" ) + Filter + wxT( "')>-1 OR " );
+        RetVal += wxT( " CONTAINS_FA(song_artist LIKE, '" ) + Filter + wxT( "')>-1 ) " );
         RetVal += wxT( "AND " );
     }
     RetVal = RetVal.RemoveLast( 4 );
